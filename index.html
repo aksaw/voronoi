@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>Voronoi</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+        <script src="js/three.js"></script>
+        <script src="https://unpkg.com/delaunator@4.0.0/delaunator.min.js"></script>
+		<script>
+            var scene = new THREE.Scene();
+            
+            var camera = new THREE.PerspectiveCamera( 75,
+                window.innerWidth / window.innerHeight, 0.1, 1000 );
+            camera.position.set( 0, 0, 100 );
+            camera.lookAt( 0, 0, 0 );
+            camera.position.z = 5;
+            
+            var renderer = new THREE.WebGLRenderer({ antialias: true });
+            // var renderer = new THREE.CanvasRenderer();
+            renderer.setSize( window.innerWidth, window.innerHeight );
+            document.body.appendChild( renderer.domElement );
+            
+            // Create random points
+            var material_circle = new THREE.MeshBasicMaterial( { color: 0xffffff } );
+            var i, N=20;
+            var coords = new Array(N);
+            var points = new Array(N);
+            var circles = new Array(N);
+            for (i = 0; i < N; i++) {
+                x = window.innerWidth * (Math.random() - 0.5) * 0.007;
+                y = window.innerHeight * (Math.random() - 0.5) * 0.009;
+                coords[i] = [x, y];
+                points[i] = new THREE.Vector3(x, y, 0);
+
+                var geometry = new THREE.CircleGeometry(  0.05 , 32 );
+                var circle = new THREE.Mesh( geometry, material_circle );
+                circle.position.set(x, y, 0);
+                circles[i] = circle;
+                scene.add( circle );
+            }
+            
+            // Delaunay triangulation
+            var material_triangle = new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true} );
+            const delaunay = Delaunator.from(coords);
+            console.log(delaunay.triangles)
+            var triangles = delaunay.triangles;
+            for (i = 0; i < triangles.length; i += 3) {
+                // var geometry = new THREE.Triangle(points[i], points[i+1], points[i+2]);
+                // var triangle = new THREE.Mesh(geometry, material_triangle);
+                // scene.add( triangle );
+                var geometry = new THREE.Geometry();
+                geometry.vertices.push(points[triangles[i]]);
+                geometry.vertices.push(points[triangles[i+1]]);
+                geometry.vertices.push(points[triangles[i+2]]);
+                var line = new THREE.Line( geometry, material_triangle );
+                scene.add( line );
+            }
+
+
+            function animate(circles) {
+	            requestAnimationFrame( animate );
+                renderer.render( scene, camera );
+            }
+            animate(circles);
+        </script>
+	</body>
+</html> 
