@@ -41,7 +41,6 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 
-
 // const light = new THREE.PointLight( 0xff0000, 1, 100 );
 // light.position.set( 50, 50, 50 );
 // light.castShadow = true; // default false
@@ -102,12 +101,12 @@ updateTriangulation()
 function updateTriangulation() {
     // remove current triangulation
     for (i = 0; i < triangles.length / 3; i += 1) {
-        scene.remove( lines[i] )
+        scene.remove( lines[i] );
+        triangle_geometries[i].dispose();
     }
 
     // update triangulation
     const delaunay = Delaunator.from(coords);
-    console.log(delaunay.triangles)
     triangles = delaunay.triangles;
     triangle_geometries = new Array(triangles.length / 3);
     lines = new Array(triangles.length / 3)
@@ -127,6 +126,7 @@ function updateTriangulation() {
     }
 }
 
+// TODO: ability to drag nodes around?
 function onDocumentMouseDown(event) {
     // mouseX = ( event.clientX - windowHalfX ) * 1;
     // mouseY = ( event.clientY - windowHalfY ) * 1;
@@ -169,12 +169,7 @@ function animate() {
 
         brightness = 0.3 + 0.7 * 0.5 * (points[i].z + amplitude)/amplitude;
         spheres[i].material.color.setScalar(brightness)
-        // color = parseInt(255 * brightness)
-        // spheres[i].material.color.set('rgb('+color+','+color+','+color+')')
-        // spheres[i].material.opacity = brightness;
 
-        // -amp -> -50 -> log(2e-22)
-        // amp -> 0 -> log(1)
         oscillators[i].volume.value = map(points[i].z, -amplitude, amplitude, -80, 0) 
     }
 
