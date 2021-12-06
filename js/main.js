@@ -53,7 +53,7 @@ document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 // renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 
 // Create random points
-var i, N=25;
+var i, N=15;
 var coords = new Array(N);
 var phases = new Array(N);
 var rates = new Array(N);
