@@ -132,7 +132,8 @@ var tone_started = false;
 function onDocumentMouseDown(event) {
     if ( !tone_started ) {
         tone_started = true;
-        await Tone.start()
+        Tone.start()
+        console.log('audio started')
     }
     // mouseX = ( event.clientX - windowHalfX ) * 1;
     // mouseY = ( event.clientY - windowHalfY ) * 1;
