@@ -83,7 +83,7 @@ for (i = 0; i < N; i++) {
 
     osc_freq = freqLow + rand_x * (freqHigh - freqLow);
     osc_phase = rand_y * 2 * Math.PI;
-    oscillators[i] = new Tone.Oscillator(osc_freq, "sine", phase=osc_phase).toDestination().start();
+    oscillators[i] = new Tone.Oscillator(osc_freq, "sine", phase=osc_phase).toDestination();
 }
 
 var material_triangle = new THREE.MeshBasicMaterial({
@@ -130,9 +130,14 @@ var tone_started = false;
 
 // TODO: ability to drag nodes around?
 function onDocumentMouseDown(event) {
-    if ( !tone_started ) {
+    if ( !tone_started ) { // Put this in a button maybe
         tone_started = true;
-        Tone.start()
+        // Tone.start()
+
+        for (i=0; i < N; i++) {
+            oscillators[i].start();
+        }
+
         console.log('audio started')
     }
     // mouseX = ( event.clientX - windowHalfX ) * 1;
