@@ -53,7 +53,7 @@ document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 // renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 
 // Create random points
-var i, N=20;
+var i, N=25;
 var coords = new Array(N);
 var phases = new Array(N);
 var rates = new Array(N);
@@ -126,8 +126,14 @@ function updateTriangulation() {
     }
 }
 
+var tone_started = false;
+
 // TODO: ability to drag nodes around?
 function onDocumentMouseDown(event) {
+    if ( !tone_started ) {
+        tone_started = true;
+        await Tone.start()
+    }
     // mouseX = ( event.clientX - windowHalfX ) * 1;
     // mouseY = ( event.clientY - windowHalfY ) * 1;
 
@@ -148,7 +154,7 @@ function onDocumentMouseDown(event) {
     points[sphere_idx].y = pos.y
 
     rx = clamp(pos.x / (0.007 * window.innerWidth) + 0.5, 0, 1); 
-    console.log(rx)
+    // ry = 1.0 - clamp(pos.y / (0.01 * window.innerWidth) + 0.5, 0, 1); 
     osc_freq = freqLow + rx * (freqHigh - freqLow);
     oscillators[sphere_idx].frequency.value = osc_freq
 
