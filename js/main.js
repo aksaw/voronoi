@@ -6,9 +6,15 @@ var mouseX = 0, mouseY = 0;
 var freqLow = 110, freqHigh = 880, freq;
 var amplitude = 0.15;
 var maxVolume = -6;
-//var windowHalfX = window.innerWidth / 2;
-//var windowHalfY = window.innerHeight / 2;
-//
+
+var windowHalfX = window.innerWidth / 2;
+var windowHalfY = window.innerHeight / 2;
+
+// variables for mousedown event handler
+var sphere_idx = 0;
+var vec = new THREE.Vector3();
+var pos = new THREE.Vector3();
+    
 //init();
 //animate();
 
@@ -17,6 +23,7 @@ var maxVolume = -6;
 // }
 
 const map = (value, x1, y1, x2, y2) => (value - x1) * (y2 - x2) / (y1 - x1) + x2;
+const clamp = (value, lower, upper) => Math.max(lower, Math.min(upper, value));
 
 var scene = new THREE.Scene();
 
@@ -24,7 +31,7 @@ var camera = new THREE.PerspectiveCamera( 75,
     window.innerWidth / window.innerHeight, 0.1, 1000 );
 // camera.position.set( 0, 0, 100 );
 camera.position.y = -6;
-camera.position.z = 2;
+camera.position.z = 3;
 camera.lookAt( 0, 0, 0 );
 
 var renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -32,7 +39,7 @@ var renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize( window.innerWidth, window.innerHeight );
 
 document.body.appendChild( renderer.domElement );
-// document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 
 
 // const light = new THREE.PointLight( 0xff0000, 1, 100 );
@@ -47,16 +54,12 @@ document.body.appendChild( renderer.domElement );
 // renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 
 // Create random points
-var material_circle = new THREE.MeshBasicMaterial( {
-    opacity: 0.95,
-    transparent: true,
-    color: 0xffffff } );
 var i, N=20;
 var coords = new Array(N);
 var phases = new Array(N);
 var rates = new Array(N);
 var points = new Array(N);
-var circles = new Array(N);
+var spheres = new Array(N);
 var oscillators = new Array(N);
 for (i = 0; i < N; i++) {
     rand_x = Math.random()
@@ -69,47 +72,90 @@ for (i = 0; i < N; i++) {
     phases[i] = Math.random() * 2 * Math.PI;
     rates[i] = Math.random();
 
+    var material_sphere = new THREE.MeshBasicMaterial( {
+        opacity: 0.95,
+        transparent: true,
+        color: 0xffffff } );
     var geometry = new THREE.SphereGeometry(  0.1 , 32 , 32 );
-    var circle = new THREE.Mesh( geometry, material_circle );
-    circle.position.set(x, y, 0);
-    circles[i] = circle;
-    scene.add( circle );
+    var sphere = new THREE.Mesh( geometry, material_sphere );
+    sphere.position.set(x, y, 0);
+    spheres[i] = sphere;
+    scene.add( sphere );
 
     osc_freq = freqLow + rand_x * (freqHigh - freqLow);
     osc_phase = rand_y * 2 * Math.PI;
     oscillators[i] = new Tone.Oscillator(osc_freq, "sine", phase=osc_phase).toDestination().start();
 }
 
-
-// Delaunay triangulation
 var material_triangle = new THREE.MeshBasicMaterial({
     opacity: 0.2,
     transparent: true,
     color: 0xffffff
   });
-//   new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true} );
-const delaunay = Delaunator.from(coords);
-console.log(delaunay.triangles)
-var triangles = delaunay.triangles;
-var triangle_geometries = new Array(triangles.length / 3);
-for (i = 0; i < triangles.length; i += 3) {
-    // var geometry = new THREE.Triangle(points[i], points[i+1], points[i+2]);
-    // var triangle = new THREE.Mesh(geometry, material_triangle);
-    // scene.add( triangle );
-    var geometry = new THREE.Geometry();
-    geometry.vertices.push(points[triangles[i]]);
-    geometry.vertices.push(points[triangles[i+1]]);
-    geometry.vertices.push(points[triangles[i+2]]);
-    triangle_geometries[i/3] = geometry;
 
-    var line = new THREE.Line( geometry, material_triangle );
-    scene.add( line );
+var triangles = new Array(0);
+var triangle_geometries;
+var lines;
+
+updateTriangulation()
+
+function updateTriangulation() {
+    // remove current triangulation
+    for (i = 0; i < triangles.length / 3; i += 1) {
+        scene.remove( lines[i] )
+    }
+
+    // update triangulation
+    const delaunay = Delaunator.from(coords);
+    console.log(delaunay.triangles)
+    triangles = delaunay.triangles;
+    triangle_geometries = new Array(triangles.length / 3);
+    lines = new Array(triangles.length / 3)
+    for (i = 0; i < triangles.length; i += 3) {
+        // var geometry = new THREE.Triangle(points[i], points[i+1], points[i+2]);
+        // var triangle = new THREE.Mesh(geometry, material_triangle);
+        // scene.add( triangle );
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push(points[triangles[i]]);
+        geometry.vertices.push(points[triangles[i+1]]);
+        geometry.vertices.push(points[triangles[i+2]]);
+        triangle_geometries[i/3] = geometry;
+
+        var line = new THREE.Line( geometry, material_triangle );
+        lines[i/3] = line
+        scene.add( line );
+    }
 }
 
-// function onDocumentMouseMove(event) {
-//     mouseX = ( event.clientX - windowHalfX ) * 1;
-//     mouseY = ( event.clientY - windowHalfY ) * 1;
-// }
+function onDocumentMouseDown(event) {
+    // mouseX = ( event.clientX - windowHalfX ) * 1;
+    // mouseY = ( event.clientY - windowHalfY ) * 1;
+
+    vec.set(
+        ( event.clientX / window.innerWidth ) * 2 - 1,
+        - ( event.clientY / window.innerHeight ) * 2 + 1,
+        0.5 );
+    vec.unproject( camera );
+    vec.sub( camera.position ).normalize();
+    var distance = - camera.position.z / vec.z;
+    pos.copy( camera.position ).add( vec.multiplyScalar( distance ) );
+
+    spheres[sphere_idx].position.x = pos.x;
+    spheres[sphere_idx].position.y = pos.y;
+
+    coords[sphere_idx] = [pos.x, pos.y]
+    points[sphere_idx].x = pos.x
+    points[sphere_idx].y = pos.y
+
+    rx = clamp(pos.x / (0.007 * window.innerWidth) + 0.5, 0, 1); 
+    console.log(rx)
+    osc_freq = freqLow + rx * (freqHigh - freqLow);
+    oscillators[sphere_idx].frequency.value = osc_freq
+
+    sphere_idx = (sphere_idx + 1) % N;
+
+    updateTriangulation();
+}
 
 
 function animate() {
@@ -118,12 +164,18 @@ function animate() {
     // animation code here
     for (i = 0; i < N; i++) {
         phases[i] += 0.01  * (1 + rates[i]);
-        circles[i].position.z = amplitude * Math.sin(phases[i]);
-        points[i].z = circles[i].position.z
+        spheres[i].position.z = amplitude * Math.sin(phases[i]);
+        points[i].z = spheres[i].position.z
+
+        brightness = 0.3 + 0.7 * 0.5 * (points[i].z + amplitude)/amplitude;
+        spheres[i].material.color.setScalar(brightness)
+        // color = parseInt(255 * brightness)
+        // spheres[i].material.color.set('rgb('+color+','+color+','+color+')')
+        // spheres[i].material.opacity = brightness;
 
         // -amp -> -50 -> log(2e-22)
         // amp -> 0 -> log(1)
-        oscillators[i].volume.value = map(points[i].z, -amplitude, amplitude, -50, 0) 
+        oscillators[i].volume.value = map(points[i].z, -amplitude, amplitude, -80, 0) 
     }
 
     for (i = 0; i < triangles.length/3; i += 1) {
