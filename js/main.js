@@ -130,6 +130,7 @@ var tone_started = false;
 
 // TODO: ability to drag nodes around?
 function onDocumentMouseDown(event) {
+
     if ( !tone_started ) { // Put this in a button maybe
         tone_started = true;
         // Tone.start()
@@ -139,34 +140,35 @@ function onDocumentMouseDown(event) {
         }
 
         console.log('audio started')
+    } else {
+        // mouseX = ( event.clientX - windowHalfX ) * 1;
+        // mouseY = ( event.clientY - windowHalfY ) * 1;
+
+        vec.set(
+            ( event.clientX / window.innerWidth ) * 2 - 1,
+            - ( event.clientY / window.innerHeight ) * 2 + 1,
+            0.5 );
+        vec.unproject( camera );
+        vec.sub( camera.position ).normalize();
+        var distance = - camera.position.z / vec.z;
+        pos.copy( camera.position ).add( vec.multiplyScalar( distance ) );
+
+        spheres[sphere_idx].position.x = pos.x;
+        spheres[sphere_idx].position.y = pos.y;
+
+        coords[sphere_idx] = [pos.x, pos.y]
+        points[sphere_idx].x = pos.x
+        points[sphere_idx].y = pos.y
+
+        rx = clamp(pos.x / (0.007 * window.innerWidth) + 0.5, 0, 1); 
+        // ry = 1.0 - clamp(pos.y / (0.01 * window.innerWidth) + 0.5, 0, 1); 
+        osc_freq = freqLow + rx * (freqHigh - freqLow);
+        oscillators[sphere_idx].frequency.value = osc_freq
+
+        sphere_idx = (sphere_idx + 1) % N;
+
+        updateTriangulation();
     }
-    // mouseX = ( event.clientX - windowHalfX ) * 1;
-    // mouseY = ( event.clientY - windowHalfY ) * 1;
-
-    vec.set(
-        ( event.clientX / window.innerWidth ) * 2 - 1,
-        - ( event.clientY / window.innerHeight ) * 2 + 1,
-        0.5 );
-    vec.unproject( camera );
-    vec.sub( camera.position ).normalize();
-    var distance = - camera.position.z / vec.z;
-    pos.copy( camera.position ).add( vec.multiplyScalar( distance ) );
-
-    spheres[sphere_idx].position.x = pos.x;
-    spheres[sphere_idx].position.y = pos.y;
-
-    coords[sphere_idx] = [pos.x, pos.y]
-    points[sphere_idx].x = pos.x
-    points[sphere_idx].y = pos.y
-
-    rx = clamp(pos.x / (0.007 * window.innerWidth) + 0.5, 0, 1); 
-    // ry = 1.0 - clamp(pos.y / (0.01 * window.innerWidth) + 0.5, 0, 1); 
-    osc_freq = freqLow + rx * (freqHigh - freqLow);
-    oscillators[sphere_idx].frequency.value = osc_freq
-
-    sphere_idx = (sphere_idx + 1) % N;
-
-    updateTriangulation();
 }
 
 
