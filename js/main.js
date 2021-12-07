@@ -164,6 +164,7 @@ function onDocumentMouseDown(event) {
         // ry = 1.0 - clamp(pos.y / (0.01 * window.innerWidth) + 0.5, 0, 1); 
         osc_freq = freqLow + rx * (freqHigh - freqLow);
         oscillators[sphere_idx].frequency.value = osc_freq
+        phases[sphere_idx] = 0;
 
         sphere_idx = (sphere_idx + 1) % N;
 
@@ -178,7 +179,7 @@ function animate() {
     // animation code here
     for (i = 0; i < N; i++) {
         phases[i] += 0.01  * (1 + rates[i]);
-        spheres[i].position.z = amplitude * Math.sin(phases[i]);
+        spheres[i].position.z = amplitude * Math.cos(phases[i]);
         points[i].z = spheres[i].position.z
 
         brightness = 0.3 + 0.7 * 0.5 * (points[i].z + amplitude)/amplitude;
