@@ -3,7 +3,7 @@
 //// var controls;
 //
 var mouseX = 0, mouseY = 0;
-var freqLow = 110, freqHigh = 880, freq;
+var freqLow = 55, freqHigh = 880, freq;
 var amplitude = 0.15;
 var maxVolume = -6;
 
